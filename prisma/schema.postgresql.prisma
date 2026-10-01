@@ -7,9 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role { STUDENT TEACHER ADMIN TUTOR }
-enum UserStatus { ACTIVE INACTIVE SUSPENDED }
-enum EnrollmentStatus { ACTIVE WITHDRAWN GRADUATED }
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+  TUTOR
+}
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+enum EnrollmentStatus {
+  ACTIVE
+  WITHDRAWN
+  GRADUATED
+}
 
 model School {
   id        String   @id @default(cuid())
