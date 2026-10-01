@@ -1,0 +1,1 @@
+export default function Loading(){return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',background:'#080b10',color:'#f3f5f7',fontFamily:'system-ui'}}><div><b>A-NOVA</b><p style={{color:'#7f8998'}}>Cargando plataforma…</p></div></main>}

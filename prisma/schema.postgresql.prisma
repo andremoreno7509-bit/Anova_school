@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role { STUDENT TEACHER ADMIN TUTOR }
+enum UserStatus { ACTIVE INACTIVE SUSPENDED }
+enum EnrollmentStatus { ACTIVE WITHDRAWN GRADUATED }
+
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+  cycles    SchoolCycle[]
+  subjects  Subject[]
+  groups    Group[]
+}
+
+model User {
+  id           String     @id @default(cuid())
+  schoolId     String
+  school       School     @relation(fields: [schoolId], references: [id])
+  firstName    String
+  lastName     String
+  email        String     @unique
+  passwordHash String
+  role         Role
+  status       UserStatus @default(ACTIVE)
+  studentCode  String?    @unique
+  employeeCode String?    @unique
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  enrollments  Enrollment[]
+  teaching     TeachingAssignment[]
+  guardianOf   GuardianStudent[] @relation("Guardian")
+  guardians    GuardianStudent[] @relation("Student")
+
+  @@index([schoolId, role])
+}
+
+model SchoolCycle {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  active    Boolean  @default(false)
+  groups    Group[]
+
+  @@unique([schoolId, name])
+}
+
+model Group {
+  id        String      @id @default(cuid())
+  schoolId  String
+  cycleId   String
+  school    School      @relation(fields: [schoolId], references: [id])
+  cycle     SchoolCycle @relation(fields: [cycleId], references: [id])
+  grade     Int
+  name      String
+  room      String?
+  active    Boolean     @default(true)
+  enrollments Enrollment[]
+  teaching    TeachingAssignment[]
+
+  @@unique([cycleId, grade, name])
+}
+
+model Subject {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id])
+  name        String
+  code        String
+  description String?
+  active      Boolean  @default(true)
+  teaching    TeachingAssignment[]
+
+  @@unique([schoolId, code])
+}
+
+model Enrollment {
+  id        String           @id @default(cuid())
+  studentId String
+  groupId   String
+  student   User             @relation(fields: [studentId], references: [id])
+  group     Group            @relation(fields: [groupId], references: [id])
+  status    EnrollmentStatus @default(ACTIVE)
+  enrolledAt DateTime        @default(now())
+
+  @@unique([studentId, groupId])
+}
+
+model TeachingAssignment {
+  id        String  @id @default(cuid())
+  teacherId String
+  groupId   String
+  subjectId String
+  teacher   User    @relation(fields: [teacherId], references: [id])
+  group     Group   @relation(fields: [groupId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([teacherId, groupId, subjectId])
+  @@index([groupId, subjectId])
+}
+
+model GuardianStudent {
+  guardianId String
+  studentId  String
+  guardian   User @relation("Guardian", fields: [guardianId], references: [id])
+  student    User @relation("Student", fields: [studentId], references: [id])
+
+  @@id([guardianId, studentId])
+}

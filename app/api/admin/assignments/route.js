@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server';import {getSession} from '../../../../lib/auth';import {prisma} from '../../../../lib/prisma';
+export async function POST(req){const s=await getSession();if(!s||s.role!=='ADMIN')return NextResponse.json({error:'Solo administradores'},{status:403});const b=await req.json();try{return NextResponse.json(await prisma.teachingAssignment.create({data:{teacherId:b.teacherId,groupId:b.groupId,subjectId:b.subjectId}}))}catch{return NextResponse.json({error:'La asignación ya existe o es inválida.'},{status:400})}}

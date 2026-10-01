@@ -1,0 +1,29 @@
+{
+  "name": "a-nova-school",
+  "version": "0.1.7",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
+    "db:generate:prod": "prisma generate --schema prisma/schema.postgresql.prisma",
+    "db:push:prod": "prisma db push --schema prisma/schema.postgresql.prisma"
+  },
+  "dependencies": {
+    "next": "15.5.4",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "@prisma/client": "6.16.3",
+    "bcryptjs": "2.4.3",
+    "jose": "5.9.6"
+  },
+  "devDependencies": {
+    "prisma": "6.16.3"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}
