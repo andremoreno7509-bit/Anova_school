@@ -7,9 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role { STUDENT TEACHER ADMIN TUTOR }
-enum UserStatus { ACTIVE INACTIVE SUSPENDED }
-enum EnrollmentStatus { ACTIVE WITHDRAWN GRADUATED }
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+  TUTOR
+}
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+enum EnrollmentStatus {
+  ACTIVE
+  WITHDRAWN
+  GRADUATED
+}
 
 model School {
   id        String   @id @default(cuid())
@@ -21,6 +34,8 @@ model School {
   cycles    SchoolCycle[]
   subjects  Subject[]
   groups    Group[]
+  evaluationPeriods EvaluationPeriod[]
+  incidents Incident[]
 }
 
 model User {
@@ -41,6 +56,10 @@ model User {
   teaching     TeachingAssignment[]
   guardianOf   GuardianStudent[] @relation("Guardian")
   guardians    GuardianStudent[] @relation("Student")
+  grades       Grade[]
+  attendance   AttendanceRecord[]
+  reportedIncidents Incident[] @relation("IncidentReporter")
+  studentIncidents  Incident[] @relation("IncidentStudent")
 
   @@index([schoolId, role])
 }
@@ -54,6 +73,7 @@ model SchoolCycle {
   endDate   DateTime
   active    Boolean  @default(false)
   groups    Group[]
+  evaluationPeriods EvaluationPeriod[]
 
   @@unique([schoolId, name])
 }
@@ -107,6 +127,10 @@ model TeachingAssignment {
   teacher   User    @relation(fields: [teacherId], references: [id])
   group     Group   @relation(fields: [groupId], references: [id])
   subject   Subject @relation(fields: [subjectId], references: [id])
+  grades     Grade[]
+  attendance AttendanceRecord[]
+  tasks      AcademicTask[]
+  schedule   ScheduleEntry[]
 
   @@unique([teacherId, groupId, subjectId])
   @@index([groupId, subjectId])
@@ -119,4 +143,102 @@ model GuardianStudent {
   student    User @relation("Student", fields: [studentId], references: [id])
 
   @@id([guardianId, studentId])
+}
+
+
+model Grade {
+  id                   String             @id @default(cuid())
+  teachingAssignmentId String
+  studentId            String
+  period               Int                @default(1)
+  score                Float
+  comment              String?
+  updatedAt            DateTime           @updatedAt
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  student              User               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([teachingAssignmentId, studentId, period])
+  @@index([studentId])
+}
+
+model AttendanceRecord {
+  id                   String             @id @default(cuid())
+  teachingAssignmentId String
+  studentId            String
+  date                 DateTime
+  status               String             @default("PRESENT")
+  note                 String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  student              User               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([teachingAssignmentId, studentId, date])
+  @@index([studentId, date])
+}
+
+model AcademicTask {
+  id                   String             @id @default(cuid())
+  teachingAssignmentId String
+  title                String
+  description          String?
+  dueDate              DateTime
+  maxScore             Float?
+  active               Boolean            @default(true)
+  createdAt            DateTime           @default(now())
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+
+  @@index([teachingAssignmentId, dueDate])
+}
+
+
+model EvaluationPeriod {
+  id        String      @id @default(cuid())
+  schoolId  String
+  cycleId   String
+  school    School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  cycle     SchoolCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  name      String
+  number    Int
+  startDate DateTime
+  endDate   DateTime
+  open      Boolean     @default(true)
+  createdAt DateTime    @default(now())
+
+  @@unique([cycleId, number])
+  @@index([schoolId, open])
+}
+
+model ScheduleEntry {
+  id                   String             @id @default(cuid())
+  teachingAssignmentId String
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  dayOfWeek            Int
+  startTime            String
+  endTime              String
+  room                  String?
+  active                Boolean            @default(true)
+
+  @@unique([teachingAssignmentId, dayOfWeek, startTime])
+  @@index([dayOfWeek, startTime])
+}
+
+model Incident {
+  id          String   @id @default(cuid())
+  schoolId    String
+  studentId   String
+  reporterId  String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student     User     @relation("IncidentStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  reporter    User     @relation("IncidentReporter", fields: [reporterId], references: [id])
+  category    String
+  severity    String   @default("LOW")
+  description String
+  status      String   @default("OPEN")
+  occurredAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([schoolId, status])
+  @@index([studentId, occurredAt])
 }
