@@ -37,8 +37,6 @@ model School {
   evaluationPeriods EvaluationPeriod[]
   incidents Incident[]
   notifications Notification[]
-  sentMessages Message[] @relation("MessageSender")
-  receivedMessages Message[] @relation("MessageRecipient")
   calendarEvents CalendarEvent[]
   messages Message[]
 }

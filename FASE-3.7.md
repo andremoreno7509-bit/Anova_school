@@ -7,3 +7,7 @@ Las operaciones validan sesión, rol, asignación docente, inscripción activa, 
 
 ## Despliegue
 Antes de desplegar ejecutar Prisma generate/push para crear Exam, ExamQuestion, ExamAttempt y ExamAnswer. Esta versión conserva los requisitos de Vercel Blob introducidos en Fase 3.1.
+
+## Hotfix 0.3.6.1
+
+Corrige relaciones MessageSender/MessageRecipient declaradas incorrectamente en School. Se conservan en User, que es el lado correcto de sender/recipient.
