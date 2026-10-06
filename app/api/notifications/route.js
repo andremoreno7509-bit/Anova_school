@@ -1,0 +1,5 @@
+import {NextResponse} from 'next/server';
+import {getSession} from '../../../lib/auth';
+import {prisma} from '../../../lib/prisma';
+export async function GET(){const s=await getSession();if(!s)return NextResponse.json({error:'No autenticado'},{status:401});const items=await prisma.notification.findMany({where:{recipientId:s.sub},orderBy:{createdAt:'desc'},take:80});const unread=await prisma.notification.count({where:{recipientId:s.sub,readAt:null}});return NextResponse.json({items,unread})}
+export async function PATCH(req){const s=await getSession();if(!s)return NextResponse.json({error:'No autenticado'},{status:401});const b=await req.json();if(b.all){await prisma.notification.updateMany({where:{recipientId:s.sub,readAt:null},data:{readAt:new Date()}});return NextResponse.json({ok:true})}if(!b.id)return NextResponse.json({error:'ID requerido'},{status:400});const n=await prisma.notification.findFirst({where:{id:b.id,recipientId:s.sub}});if(!n)return NextResponse.json({error:'No encontrada'},{status:404});await prisma.notification.update({where:{id:n.id},data:{readAt:new Date()}});return NextResponse.json({ok:true})}

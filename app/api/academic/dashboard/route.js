@@ -25,7 +25,7 @@ export async function GET() {
                 teacher: { select: { firstName: true, lastName: true } },
                 grades: { where: { studentId: user.id }, orderBy: { period: 'asc' } },
                 attendance: { where: { studentId: user.id }, orderBy: { date: 'desc' } },
-                tasks: { where: { active: true }, orderBy: { dueDate: 'asc' } },
+                tasks: { where: { active: true }, orderBy: { dueDate: 'asc' }, include: { attachments: true, submissions: { where: { studentId: user.id }, include: { attachments: true } } } },
                 schedule: { where: { active: true }, orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }] },
               },
             },
@@ -42,14 +42,14 @@ export async function GET() {
     const periodNames = Object.fromEntries(periods.map((p) => [p.number, p.name]));
     const grades = teaching.flatMap((x) => x.grades.map((g) => ({ id: g.id, assignmentId: x.id, subject: x.subject.name, code: x.subject.code, period: g.period, periodName: periodNames[g.period] || `Periodo ${g.period}`, score: g.score, comment: g.comment, updatedAt: g.updatedAt })));
     const attendance = teaching.flatMap((x) => x.attendance.map((a) => ({ id: a.id, assignmentId: x.id, subject: x.subject.name, date: a.date, status: a.status, note: a.note }))).sort((a, b) => new Date(b.date) - new Date(a.date));
-    const tasks = teaching.flatMap((x) => x.tasks.map((t) => ({ id: t.id, assignmentId: x.id, subject: x.subject.name, title: t.title, description: t.description, dueDate: t.dueDate, maxScore: t.maxScore, active: t.active }))).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    const tasks = teaching.flatMap((x) => x.tasks.map((t) => ({ id: t.id, assignmentId: x.id, subject: x.subject.name, title: t.title, description: t.description, dueDate: t.dueDate, maxScore: t.maxScore, active: t.active, attachments: t.attachments, submission: t.submissions?.[0] || null }))).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
     const schedule = teaching.flatMap((x) => x.schedule.map((h) => ({ id: h.id, assignmentId: x.id, subject: x.subject.name, code: x.subject.code, teacher: `${x.teacher.firstName} ${x.teacher.lastName}`, dayOfWeek: h.dayOfWeek, startTime: h.startTime, endTime: h.endTime, room: h.room || enrollment?.group.room || null }))).sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime));
     const incidents = await prisma.incident.findMany({ where: { studentId: user.id }, include: { reporter: { select: { firstName: true, lastName: true } } }, orderBy: { occurredAt: 'desc' } });
     const average = grades.length ? grades.reduce((n, g) => n + g.score, 0) / grades.length : null;
     const counted = attendance.filter((a) => ['PRESENT', 'ABSENT', 'LATE'].includes(a.status));
     const attendanceRate = counted.length ? (counted.filter((a) => a.status !== 'ABSENT').length / counted.length) * 100 : null;
     const now = new Date();
-    const pendingTasks = tasks.filter((t) => new Date(t.dueDate) >= new Date(now.toDateString()));
+    const pendingTasks = tasks.filter((t) => !['SUBMITTED','LATE','GRADED'].includes(t.submission?.status) && new Date(t.dueDate) >= new Date(now.toDateString()));
     const gradeScore = average === null ? 100 : Math.max(0, Math.min(100, average * 10));
     const attScore = attendanceRate === null ? 100 : attendanceRate;
     const taskScore = Math.max(60, 100 - Math.min(pendingTasks.length, 8) * 5);
@@ -66,6 +66,15 @@ export async function GET() {
       incidents: incidents.map((i) => ({ ...i, reporterName: `${i.reporter.firstName} ${i.reporter.lastName}` })),
       metrics: { average: average === null ? null : Number(average.toFixed(1)), attendanceRate: attendanceRate === null ? null : Math.round(attendanceRate), absences: attendance.filter((a) => a.status === 'ABSENT').length, academicPulse },
     });
+  }
+
+  if (user.role === 'TUTOR') {
+    const links = await prisma.guardianStudent.findMany({
+      where: { guardianId: user.id },
+      include: { student: { select: { id: true, firstName: true, lastName: true, studentCode: true, enrollments: { where: { status: 'ACTIVE' }, take: 1, include: { group: { include: { cycle: true } } } } } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return NextResponse.json({ user, students: links.map(({student}) => ({ id: student.id, firstName: student.firstName, lastName: student.lastName, studentCode: student.studentCode, group: student.enrollments[0] ? `${student.enrollments[0].group.grade}° ${student.enrollments[0].group.name}` : null, cycle: student.enrollments[0]?.group.cycle.name || null })) });
   }
 
   if (user.role === 'TEACHER') {

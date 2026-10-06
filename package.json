@@ -1,6 +1,6 @@
 {
   "name": "a-nova-school",
-  "version": "0.2.5",
+  "version": "0.3.6",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -18,7 +18,9 @@
     "react-dom": "19.1.1",
     "@prisma/client": "6.16.3",
     "bcryptjs": "2.4.3",
-    "jose": "5.9.6"
+    "jose": "5.9.6",
+    "@vercel/blob": "2.6.1",
+    "jspdf": "2.5.2"
   },
   "devDependencies": {
     "prisma": "6.16.3"

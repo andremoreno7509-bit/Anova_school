@@ -36,6 +36,11 @@ model School {
   groups    Group[]
   evaluationPeriods EvaluationPeriod[]
   incidents Incident[]
+  notifications Notification[]
+  sentMessages Message[] @relation("MessageSender")
+  receivedMessages Message[] @relation("MessageRecipient")
+  calendarEvents CalendarEvent[]
+  messages Message[]
 }
 
 model User {
@@ -58,8 +63,13 @@ model User {
   guardians    GuardianStudent[] @relation("Student")
   grades       Grade[]
   attendance   AttendanceRecord[]
+  taskSubmissions TaskSubmission[]
   reportedIncidents Incident[] @relation("IncidentReporter")
   studentIncidents  Incident[] @relation("IncidentStudent")
+  notifications Notification[]
+  sentMessages Message[] @relation("MessageSender")
+  receivedMessages Message[] @relation("MessageRecipient")
+  examAttempts ExamAttempt[]
 
   @@index([schoolId, role])
 }
@@ -131,6 +141,7 @@ model TeachingAssignment {
   attendance AttendanceRecord[]
   tasks      AcademicTask[]
   schedule   ScheduleEntry[]
+  exams      Exam[]
 
   @@unique([teacherId, groupId, subjectId])
   @@index([groupId, subjectId])
@@ -141,8 +152,10 @@ model GuardianStudent {
   studentId  String
   guardian   User @relation("Guardian", fields: [guardianId], references: [id])
   student    User @relation("Student", fields: [studentId], references: [id])
+  createdAt  DateTime @default(now())
 
   @@id([guardianId, studentId])
+  @@index([studentId])
 }
 
 
@@ -185,10 +198,61 @@ model AcademicTask {
   dueDate              DateTime
   maxScore             Float?
   active               Boolean            @default(true)
+  status               String             @default("PUBLISHED")
   createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
   teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  attachments          TaskAttachment[]
+  submissions          TaskSubmission[]
 
   @@index([teachingAssignmentId, dueDate])
+}
+
+model TaskAttachment {
+  id        String       @id @default(cuid())
+  taskId    String
+  task      AcademicTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  pathname  String
+  mimeType  String?
+  size      Int
+  createdAt DateTime     @default(now())
+
+  @@index([taskId])
+}
+
+model TaskSubmission {
+  id          String       @id @default(cuid())
+  taskId      String
+  studentId   String
+  task        AcademicTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  student     User         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status      String       @default("SUBMITTED")
+  submittedAt DateTime?
+  score       Float?
+  feedback    String?
+  gradedAt    DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  attachments SubmissionAttachment[]
+
+  @@unique([taskId, studentId])
+  @@index([studentId, status])
+}
+
+model SubmissionAttachment {
+  id           String         @id @default(cuid())
+  submissionId String
+  submission   TaskSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  name         String
+  url          String
+  pathname     String
+  mimeType     String?
+  size         Int
+  createdAt    DateTime       @default(now())
+
+  @@index([submissionId])
 }
 
 
@@ -241,4 +305,120 @@ model Incident {
 
   @@index([schoolId, status])
   @@index([studentId, occurredAt])
+}
+
+
+model Notification {
+  id          String   @id @default(cuid())
+  schoolId    String
+  recipientId String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  recipient   User     @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  type        String
+  title       String
+  message     String
+  link        String?
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([recipientId, readAt, createdAt])
+  @@index([schoolId, createdAt])
+}
+
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  type        String   @default("SCHOOL")
+  startAt     DateTime
+  endAt       DateTime?
+  audience    String   @default("ALL")
+  groupId     String?
+  createdById String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([schoolId, startAt])
+  @@index([groupId, startAt])
+}
+
+
+model Message {
+  id          String   @id @default(cuid())
+  schoolId    String
+  senderId    String
+  recipientId String
+  subject     String?
+  body        String
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User     @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, readAt, createdAt])
+  @@index([senderId, createdAt])
+  @@index([schoolId, createdAt])
+}
+
+
+model Exam {
+  id String @id @default(cuid())
+  teachingAssignmentId String
+  teachingAssignment TeachingAssignment @relation(fields:[teachingAssignmentId], references:[id], onDelete:Cascade)
+  title String
+  description String?
+  opensAt DateTime
+  closesAt DateTime
+  durationMinutes Int @default(30)
+  maxAttempts Int @default(1)
+  published Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  questions ExamQuestion[]
+  attempts ExamAttempt[]
+  @@index([teachingAssignmentId, opensAt])
+}
+model ExamQuestion {
+  id String @id @default(cuid())
+  examId String
+  exam Exam @relation(fields:[examId], references:[id], onDelete:Cascade)
+  type String @default("MULTIPLE_CHOICE")
+  prompt String
+  optionsJson String?
+  correctAnswer String?
+  points Float @default(1)
+  position Int @default(1)
+  answers ExamAnswer[]
+  @@index([examId, position])
+}
+model ExamAttempt {
+  id String @id @default(cuid())
+  examId String
+  studentId String
+  exam Exam @relation(fields:[examId], references:[id], onDelete:Cascade)
+  student User @relation(fields:[studentId], references:[id], onDelete:Cascade)
+  attemptNumber Int @default(1)
+  startedAt DateTime @default(now())
+  submittedAt DateTime?
+  objectiveScore Float?
+  finalScore Float?
+  status String @default("IN_PROGRESS")
+  answers ExamAnswer[]
+  @@unique([examId, studentId, attemptNumber])
+  @@index([studentId, status])
+}
+model ExamAnswer {
+  id String @id @default(cuid())
+  attemptId String
+  questionId String
+  attempt ExamAttempt @relation(fields:[attemptId], references:[id], onDelete:Cascade)
+  question ExamQuestion @relation(fields:[questionId], references:[id], onDelete:Cascade)
+  answer String?
+  awardedPoints Float?
+  feedback String?
+  @@unique([attemptId, questionId])
 }

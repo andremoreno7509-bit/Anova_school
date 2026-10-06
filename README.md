@@ -34,3 +34,13 @@ Abre http://localhost:3000
 Consulta `DEPLOYMENT.md`. Una URL pública requiere un proveedor de hosting y una base PostgreSQL accesible por ese hosting.
 
 A-NOVA School © 2026 — Developed by André Moreno
+
+
+## Fase 3.1 · A-NOVA Assignments
+La v0.3.0 incorpora entregas de tareas, archivos privados, calificación y retroalimentación. Consulta `FASE-3.1.md`.
+
+## Fase 3.3 · v0.3.3
+Incluye centro de notificaciones persistente y eventos académicos automáticos para alumno y tutor.
+
+## Fase 3.4
+Boletas académicas descargables en PDF con permisos por rol.
