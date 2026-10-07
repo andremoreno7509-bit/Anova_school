@@ -1,4 +1,4 @@
-# A-NOVA School — v0.4.0 Intelligence
+# A-NOVA School — v0.5.0 Enterprise
 
 Primera versión usable de A-NOVA antes de iniciar la Fase 2 académica.
 
@@ -48,3 +48,6 @@ Boletas académicas descargables en PDF con permisos por rol.
 
 ## Fase 4 · A-NOVA Intelligence
 La v0.4.0 incorpora dashboard ejecutivo, Academic Risk Engine, tendencias, comparativas, alertas, recomendaciones, reporte PDF y un asistente analítico determinista con alcance por rol. Consulta `FASE-4.md`.
+
+## Fase 5 · A-NOVA Enterprise (v0.5.0)
+La versión 0.5.0 incorpora white-label, auditoría, reportes ejecutivos, seguridad de acceso, integraciones con A-NOVA Connector, licenciamiento y arquitectura multi-tenant. Consulta `FASE-5.md`.

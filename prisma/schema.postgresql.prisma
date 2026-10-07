@@ -39,6 +39,10 @@ model School {
   notifications Notification[]
   calendarEvents CalendarEvent[]
   messages Message[]
+  settings SchoolSettings?
+  auditLogs AuditLog[]
+  integrations IntegrationSource[]
+  subscription SchoolSubscription?
 }
 
 model User {
@@ -68,6 +72,13 @@ model User {
   sentMessages Message[] @relation("MessageSender")
   receivedMessages Message[] @relation("MessageRecipient")
   examAttempts ExamAttempt[]
+  auditLogs AuditLog[] @relation("AuditActor")
+  failedLoginCount Int @default(0)
+  lockedUntil DateTime?
+  lastLoginAt DateTime?
+  lastLoginIp String?
+  passwordChangedAt DateTime?
+  mustChangePassword Boolean @default(false)
 
   @@index([schoolId, role])
 }
@@ -419,4 +430,103 @@ model ExamAnswer {
   awardedPoints Float?
   feedback String?
   @@unique([attemptId, questionId])
+}
+
+
+model SchoolSettings {
+  id             String   @id @default(cuid())
+  schoolId       String   @unique
+  school         School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  displayName    String?
+  shortName      String?
+  logoUrl        String?
+  logoPath       String?
+  primaryColor   String   @default("#3155E7")
+  secondaryColor String   @default("#0B1422")
+  accentColor    String   @default("#8093FF")
+  contactEmail   String?
+  phone          String?
+  website        String?
+  address        String?
+  city           String?
+  state          String?
+  country        String   @default("México")
+  postalCode     String?
+  timezone       String   @default("America/Mexico_City")
+  locale         String   @default("es-MX")
+  reportFooter   String?
+  showPoweredBy  Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  schoolId  String
+  actorId   String?
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  actor     User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  summary   String
+  details   String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([schoolId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([entity, entityId])
+}
+
+model IntegrationSource {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name        String
+  type        String   @default("API")
+  status      String   @default("ACTIVE")
+  baseUrl     String?
+  configJson  String?
+  tokenHash   String?
+  tokenPrefix String?
+  lastSyncAt  DateTime?
+  lastError   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  syncRuns    SyncRun[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId, status])
+}
+
+model SyncRun {
+  id            String            @id @default(cuid())
+  integrationId String
+  integration   IntegrationSource @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  status        String            @default("SUCCESS")
+  received      Int               @default(0)
+  created       Int               @default(0)
+  updated       Int               @default(0)
+  skipped       Int               @default(0)
+  failed        Int               @default(0)
+  summary       String?
+  startedAt     DateTime          @default(now())
+  completedAt   DateTime?
+
+  @@index([integrationId, startedAt])
+}
+
+model SchoolSubscription {
+  id           String   @id @default(cuid())
+  schoolId     String   @unique
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  plan         String   @default("DEMO")
+  status       String   @default("ACTIVE")
+  maxStudents  Int      @default(1000)
+  maxStaff     Int      @default(200)
+  featuresJson String?
+  validUntil   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

@@ -4,14 +4,17 @@ const p=new PrismaClient();
 async function main(){
  const hash=await bcrypt.hash('Nova2026!',12);
  const school=await p.school.upsert({where:{code:'ANOVA-DEMO'},update:{name:'A-NOVA School Demo'},create:{name:'A-NOVA School Demo',code:'ANOVA-DEMO'}});
+ await p.schoolSettings.upsert({where:{schoolId:school.id},update:{},create:{schoolId:school.id,displayName:'A-NOVA School Demo',shortName:'A-NOVA',primaryColor:'#3155E7',secondaryColor:'#0B1422',accentColor:'#8093FF',country:'México',timezone:'America/Mexico_City',locale:'es-MX',reportFooter:'Documento académico generado por A-NOVA School.',showPoweredBy:true}});
+ await p.schoolSubscription.upsert({where:{schoolId:school.id},update:{},create:{schoolId:school.id,plan:'DEMO',status:'ACTIVE',maxStudents:1000,maxStaff:200,featuresJson:JSON.stringify(['ACADEMICS','ASSIGNMENTS','TUTORS','NOTIFICATIONS','DOCUMENTS','CALENDAR','MESSAGING','EXAMS','INTELLIGENCE','ENTERPRISE'])}});
  const cycle=await p.schoolCycle.upsert({where:{schoolId_name:{schoolId:school.id,name:'2026–2027'}},update:{active:true},create:{schoolId:school.id,name:'2026–2027',startDate:new Date('2026-08-17'),endDate:new Date('2027-07-09'),active:true}});
  const group=await p.group.upsert({where:{cycleId_grade_name:{cycleId:cycle.id,grade:3,name:'A'}},update:{room:'304',active:true},create:{schoolId:school.id,cycleId:cycle.id,grade:3,name:'A',room:'304'}});
- const userData=[['André','Moreno','andre@anova.edu.mx','STUDENT','A0001',null],['Edgar','Ramírez','edgar@anova.edu.mx','TEACHER',null,'P0001'],['Yaneth','Rayo','yaneth@anova.edu.mx','TEACHER',null,'P0002'],['Javier','Su','javier@anova.edu.mx','TEACHER',null,'P0003'],['Control','Escolar','admin@anova.edu.mx','ADMIN',null,'ADM001']];
+ const userData=[['André','Moreno','andre@anova.edu.mx','STUDENT','A0001',null],['Edgar','Ramírez','edgar@anova.edu.mx','TEACHER',null,'P0001'],['Yaneth','Rayo','yaneth@anova.edu.mx','TEACHER',null,'P0002'],['Javier','Su','javier@anova.edu.mx','TEACHER',null,'P0003'],['Control','Escolar','admin@anova.edu.mx','ADMIN',null,'ADM001'],['Tutor','Demo','tutor@anova.edu.mx','TUTOR',null,null]];
  const users={};
  for(const [firstName,lastName,email,role,studentCode,employeeCode] of userData){users[email]=await p.user.upsert({where:{email},update:{schoolId:school.id,passwordHash:hash,status:'ACTIVE',role},create:{schoolId:school.id,firstName,lastName,email,passwordHash:hash,role,studentCode,employeeCode}})}
  await p.enrollment.upsert({where:{studentId_groupId:{studentId:users['andre@anova.edu.mx'].id,groupId:group.id}},update:{status:'ACTIVE'},create:{studentId:users['andre@anova.edu.mx'].id,groupId:group.id,status:'ACTIVE'}});
+ await p.guardianStudent.upsert({where:{guardianId_studentId:{guardianId:users['tutor@anova.edu.mx'].id,studentId:users['andre@anova.edu.mx'].id}},update:{},create:{guardianId:users['tutor@anova.edu.mx'].id,studentId:users['andre@anova.edu.mx'].id}});
  const subjectData=[['MAT','Matemáticas','edgar@anova.edu.mx'],['LIT','Literatura','yaneth@anova.edu.mx'],['FIS','Física','javier@anova.edu.mx'],['BIO','Biología','javier@anova.edu.mx'],['QUI','Química','javier@anova.edu.mx'],['HIS','Historia','yaneth@anova.edu.mx']];
  for(const [code,name,teacherEmail] of subjectData){const subject=await p.subject.upsert({where:{schoolId_code:{schoolId:school.id,code}},update:{name,active:true},create:{schoolId:school.id,code,name,active:true}});const teacher=users[teacherEmail];await p.teachingAssignment.upsert({where:{teacherId_groupId_subjectId:{teacherId:teacher.id,groupId:group.id,subjectId:subject.id}},update:{},create:{teacherId:teacher.id,groupId:group.id,subjectId:subject.id}})}
- console.log('A-NOVA 0.1.5 academic demo data ready');
+ console.log('A-NOVA 0.5.0 Enterprise demo data ready');
 }
 main().catch(console.error).finally(()=>p.$disconnect());
