@@ -1,4 +1,4 @@
-# A-NOVA School — v0.5.1 CSB Pedregal Edition
+# A-NOVA School — v0.5.2 CSB Pedregal Edition
 
 Primera versión usable de A-NOVA antes de iniciar la Fase 2 académica.
 
@@ -52,5 +52,9 @@ La v0.4.0 incorpora dashboard ejecutivo, Academic Risk Engine, tendencias, compa
 ## Fase 5 · A-NOVA Enterprise (v0.5.0)
 La versión 0.5.0 incorpora white-label, auditoría, reportes ejecutivos, seguridad de acceso, integraciones con A-NOVA Connector, licenciamiento y arquitectura multi-tenant. Consulta `FASE-5.md`.
 
-## CSB Pedregal Edition · v0.5.1
+## CSB Pedregal Edition · v0.5.2
 Personalización institucional para el Colegio Simón Bolívar del Pedregal: logo, favicon, paleta guinda/azul marino/dorado, login premium, navegación CSB y branding institucional en documentos. Consulta `FASE-5.1-CSB.md`.
+
+
+## v0.5.2 · CSB Beta
+Login actualizado con fotografía real del campus, escudo institucional y retiro de credenciales demo visibles.
