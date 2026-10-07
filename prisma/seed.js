@@ -3,8 +3,8 @@ const bcrypt=require('bcryptjs');
 const p=new PrismaClient();
 async function main(){
  const hash=await bcrypt.hash('Nova2026!',12);
- const school=await p.school.upsert({where:{code:'ANOVA-DEMO'},update:{name:'A-NOVA School Demo'},create:{name:'A-NOVA School Demo',code:'ANOVA-DEMO'}});
- await p.schoolSettings.upsert({where:{schoolId:school.id},update:{},create:{schoolId:school.id,displayName:'A-NOVA School Demo',shortName:'A-NOVA',primaryColor:'#3155E7',secondaryColor:'#0B1422',accentColor:'#8093FF',country:'México',timezone:'America/Mexico_City',locale:'es-MX',reportFooter:'Documento académico generado por A-NOVA School.',showPoweredBy:true}});
+ const school=await p.school.upsert({where:{code:'ANOVA-DEMO'},update:{name:'Colegio Simón Bolívar del Pedregal'},create:{name:'Colegio Simón Bolívar del Pedregal',code:'ANOVA-DEMO'}});
+ await p.schoolSettings.upsert({where:{schoolId:school.id},update:{displayName:'Colegio Simón Bolívar del Pedregal',shortName:'CSB Pedregal',logoUrl:'/csb-logo.jpg',primaryColor:'#670337',secondaryColor:'#02244A',accentColor:'#D4AD22',website:'https://csbpedregal.edu.mx/',city:'Ciudad de México',state:'Ciudad de México',country:'México',timezone:'America/Mexico_City',locale:'es-MX',reportFooter:'Colegio Simón Bolívar del Pedregal · Portal Académico CSB · Powered by A-NOVA.',showPoweredBy:true},create:{schoolId:school.id,displayName:'Colegio Simón Bolívar del Pedregal',shortName:'CSB Pedregal',logoUrl:'/csb-logo.jpg',primaryColor:'#670337',secondaryColor:'#02244A',accentColor:'#D4AD22',website:'https://csbpedregal.edu.mx/',city:'Ciudad de México',state:'Ciudad de México',country:'México',timezone:'America/Mexico_City',locale:'es-MX',reportFooter:'Colegio Simón Bolívar del Pedregal · Portal Académico CSB · Powered by A-NOVA.',showPoweredBy:true}});
  await p.schoolSubscription.upsert({where:{schoolId:school.id},update:{},create:{schoolId:school.id,plan:'DEMO',status:'ACTIVE',maxStudents:1000,maxStaff:200,featuresJson:JSON.stringify(['ACADEMICS','ASSIGNMENTS','TUTORS','NOTIFICATIONS','DOCUMENTS','CALENDAR','MESSAGING','EXAMS','INTELLIGENCE','ENTERPRISE'])}});
  const cycle=await p.schoolCycle.upsert({where:{schoolId_name:{schoolId:school.id,name:'2026–2027'}},update:{active:true},create:{schoolId:school.id,name:'2026–2027',startDate:new Date('2026-08-17'),endDate:new Date('2027-07-09'),active:true}});
  const group=await p.group.upsert({where:{cycleId_grade_name:{cycleId:cycle.id,grade:3,name:'A'}},update:{room:'304',active:true},create:{schoolId:school.id,cycleId:cycle.id,grade:3,name:'A',room:'304'}});
@@ -15,6 +15,6 @@ async function main(){
  await p.guardianStudent.upsert({where:{guardianId_studentId:{guardianId:users['tutor@anova.edu.mx'].id,studentId:users['andre@anova.edu.mx'].id}},update:{},create:{guardianId:users['tutor@anova.edu.mx'].id,studentId:users['andre@anova.edu.mx'].id}});
  const subjectData=[['MAT','Matemáticas','edgar@anova.edu.mx'],['LIT','Literatura','yaneth@anova.edu.mx'],['FIS','Física','javier@anova.edu.mx'],['BIO','Biología','javier@anova.edu.mx'],['QUI','Química','javier@anova.edu.mx'],['HIS','Historia','yaneth@anova.edu.mx']];
  for(const [code,name,teacherEmail] of subjectData){const subject=await p.subject.upsert({where:{schoolId_code:{schoolId:school.id,code}},update:{name,active:true},create:{schoolId:school.id,code,name,active:true}});const teacher=users[teacherEmail];await p.teachingAssignment.upsert({where:{teacherId_groupId_subjectId:{teacherId:teacher.id,groupId:group.id,subjectId:subject.id}},update:{},create:{teacherId:teacher.id,groupId:group.id,subjectId:subject.id}})}
- console.log('A-NOVA 0.5.0 Enterprise demo data ready');
+ console.log('A-NOVA 0.5.1 CSB Edition demo data ready');
 }
 main().catch(console.error).finally(()=>p.$disconnect());

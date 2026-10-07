@@ -1,6 +1,7 @@
 import {NextResponse} from 'next/server';
 import {getSession} from '../../../../lib/auth';
 import {prisma} from '../../../../lib/prisma';
+import {normalizeBranding} from '../../../../lib/branding';
 
 async function canReadStudent(session, studentId){
   if(session.role==='STUDENT') return session.sub===studentId;
@@ -26,6 +27,7 @@ export async function GET(req){
   const allGrades=rows.flatMap(r=>r.periods.filter(p=>p.score!==null).map(p=>p.score));
   const attendance=enrollment.group.teaching.flatMap(a=>a.attendance); const counted=attendance.filter(a=>['PRESENT','ABSENT','LATE'].includes(a.status));
   const attendanceRate=counted.length?Math.round(counted.filter(a=>a.status!=='ABSENT').length/counted.length*100):null;
-  const schoolBrand={name:student.school.settings?.displayName||student.school.name,code:student.school.code,logoUrl:student.school.settings?.logoUrl||null,reportFooter:student.school.settings?.reportFooter||null,showPoweredBy:student.school.settings?.showPoweredBy!==false};
+  const normalized=normalizeBranding(student.school,student.school.settings);
+  const schoolBrand={name:normalized.displayName,code:student.school.code,logoUrl:normalized.logoUrl,primaryColor:normalized.primaryColor,secondaryColor:normalized.secondaryColor,accentColor:normalized.accentColor,reportFooter:normalized.reportFooter,showPoweredBy:normalized.showPoweredBy};
   return NextResponse.json({document:{type:'REPORT_CARD',generatedAt:new Date().toISOString()},school:schoolBrand,student:{id:student.id,name:`${student.firstName} ${student.lastName}`,email:student.email,studentCode:student.studentCode},cycle:{id:enrollment.group.cycle.id,name:enrollment.group.cycle.name},group:`${enrollment.group.grade}° ${enrollment.group.name}`,room:enrollment.group.room,periods:periods.map(p=>({number:p.number,name:p.name,startDate:p.startDate,endDate:p.endDate})),subjects:rows,summary:{average:allGrades.length?Number((allGrades.reduce((n,x)=>n+x,0)/allGrades.length).toFixed(1)):null,attendanceRate,absences:attendance.filter(a=>a.status==='ABSENT').length,lates:attendance.filter(a=>a.status==='LATE').length,records:counted.length}});
 }

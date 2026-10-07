@@ -27,3 +27,8 @@ No usar `--force-reset` en producción.
 
 ## Multi-colegio
 Cada registro académico continúa aislado mediante `schoolId`. Para onboarding automatizado de una nueva escuela se requiere `PLATFORM_SETUP_KEY`; nunca debe exponerse en el navegador ni almacenarse en el repositorio.
+
+## v0.5.1 · CSB Pedregal Edition
+No requiere cambios de esquema adicionales respecto a v0.5.0. Incluye assets estáticos de branding en `public/` y un preset CSB para el tenant demo existente. El Build Command de Vercel puede permanecer igual:
+
+`npm run db:generate:prod && npm run db:push:prod && npm run build`
