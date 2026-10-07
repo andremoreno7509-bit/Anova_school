@@ -1,4 +1,4 @@
-# A-NOVA School — MVP 0.1.7
+# A-NOVA School — v0.4.0 Intelligence
 
 Primera versión usable de A-NOVA antes de iniciar la Fase 2 académica.
 
@@ -44,3 +44,7 @@ Incluye centro de notificaciones persistente y eventos académicos automáticos 
 
 ## Fase 3.4
 Boletas académicas descargables en PDF con permisos por rol.
+
+
+## Fase 4 · A-NOVA Intelligence
+La v0.4.0 incorpora dashboard ejecutivo, Academic Risk Engine, tendencias, comparativas, alertas, recomendaciones, reporte PDF y un asistente analítico determinista con alcance por rol. Consulta `FASE-4.md`.

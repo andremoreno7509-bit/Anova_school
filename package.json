@@ -1,6 +1,6 @@
 {
   "name": "a-nova-school",
-  "version": "0.3.6.5",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
